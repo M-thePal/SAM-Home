@@ -1,0 +1,6 @@
+out/
+# The signing key: updates must be signed with it, and it must never be public.
+key.jks
+# Backups and undo list for one specific TV, including APKs of other people's apps.
+tv-backup/
+.DS_Store
