@@ -50,6 +50,7 @@ public class MainActivity extends Activity {
 
     private static final String TV_PLAYER = "com.mstar.tv.tvplayer.ui";
     private static final String START_TV_PLAYER = "com.mstar.android.intent.action.START_TV_PLAYER";
+    private static final String SOURCE_MENU = "com.talent.intent.action.TV_SOURCE_MENU";
     // MStar EnumInputSource values, as the Source menu uses them.
     private static final int SOURCE_DTV = 28;
     private static final int SOURCE_HDMI1 = 23;
@@ -122,7 +123,7 @@ public class MainActivity extends Activity {
                 new Intent("com.mstar.tvsetting.ui.intent.action.ChannelActivity")));
         chips.addView(chip(R.drawable.ic_guide, "جدول پخش", new Intent("com.talent.intent.action.epg")));
         chips.addView(chip(R.drawable.ic_input, "ورودی‌ها",
-                new Intent("com.talent.intent.action.TV_SOURCE_MENU")));
+                new Intent(SOURCE_MENU)));
         chips.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1f));
         appsChip = chip(R.drawable.ic_apps, "برنامه‌ها", null);
         chips.addView(appsChip);
@@ -286,6 +287,19 @@ public class MainActivity extends Activity {
         if (!launch(i, false)) launch(new Intent().setClassName(TV_PLAYER, TV_PLAYER + ".RootActivity"), true);
     }
 
+    // The TV's source menu only switches inputs when it sits on top of the TV player. Opened on its
+    // own over this screen it lands in a separate task, and the player never gets the choice.
+    // So bring the player up first and put the menu in its task, as the remote's Source key does.
+    private void openSourceMenu() {
+        Intent player = new Intent().setClassName(TV_PLAYER, TV_PLAYER + ".RootActivity")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            startActivities(new Intent[]{player, new Intent(SOURCE_MENU)});
+        } catch (ActivityNotFoundException | SecurityException e) {
+            launch(new Intent(SOURCE_MENU), true);
+        }
+    }
+
     private void focusLastUsed() {
         ("hdmi".equals(prefs().getString("last", "tv")) ? hdmiCard : tvCard).requestFocus();
     }
@@ -323,6 +337,7 @@ public class MainActivity extends Activity {
         focusable(chip, 1.05f, new View.OnClickListener() {
             @Override public void onClick(View v) {
                 if (intent == null) openApps();
+                else if (SOURCE_MENU.equals(intent.getAction())) openSourceMenu();
                 else launch(new Intent(intent), true);
             }
         });
